@@ -1,0 +1,54 @@
+# IDE
+.idea/
+.vs-code/
+.vscode/
+.vs/
+
+# Cache
+nimcache/
+nimble/
+htmldocs/
+
+# builded
+**/build/
+*_linkerArgs.txt
+
+# Tests
+test*/
+!tests/
+
+# Logs
+*.log
+
+# Compiled
+*.js
+*.exe
+tests/test*
+!tests/test*.nim
+
+# Compiled Python modules
+__pycache__/
+*.so
+# .pyd compiled on my Win machine
+
+# PyPi Package
+*.egg-info/
+bindings/**/dist/
+**/upload.bash
+
+# Testing :)
+a.nim
+a.py
+a.html
+*.db
+private_test*.nim
+
+
+# NodeJS builds
+src/happyx/bindings/bin/
+src/happyx/bindings/denim_build/
+src/happyx/bindings/build_denim.sh
+
+
+# Garbage
+*.bin
