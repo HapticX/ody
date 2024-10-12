@@ -18,7 +18,7 @@ proc buildServerStatus*(config: JsonNode, onlinePlayers: seq[ServerPlayer]): Jso
   # var f = open("nim.txt", fmRead)
   # let data = f.readAll()
   # f.close()
-  result = %*{
+  %*{
     "version": {
       "name": config["version"],
       "protocol": PROTOCOLS[config["version"].getStr]

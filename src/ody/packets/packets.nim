@@ -28,6 +28,14 @@ type
     details*: seq[tuple[title: string, description: string]]
 
 
+proc sendBuffer*(socket: AsyncSocket, buf: Buffer): Future[void] {.async.} =
+  var tmpBuf = newBuffer()
+  tmpBuf.writeVar[:int32](buf.data.len.int32)
+  tmpBuf.data = tmpBuf.data & buf.data
+  await socket.send(addr tmpBuf.data[0], tmpBuf.data.len)
+  tmpBuf.free()
+
+
 proc parsePacket*(buf: Buffer): BasePacket =
   ## Parses AsyncSocket client connection and return base packet information
   let
@@ -86,27 +94,23 @@ proc sendServerStatus*(socket: AsyncSocket, data: JsonNode): Future[void] {.asyn
   var buf = newBuffer()
   buf.writeVar[:int32](0x00)
   buf.writeString($data)
-  buf.pos = 0
-  echo buf.readVar[:int32]()
-  echo buf.readStr()
-  buf.pos = buf.data.len-1
-  # await socket.write()
-  await socket.send(addr buf.data[0], buf.data.len)
-  # await socket.send(cast[string](buf.data))
-  # buf.free()
+  await socket.sendBuffer(buf)
+  buf.free()
 
 
 proc sendLoggedIn*(client: Client): Future[void] {.async.} =
   ## Responds server status
-  # if client.protocolVersion < 735:
+  if client.protocolVersion < 735:
     # Old login success
-  var buf = newBuffer()
-  buf.writeNum[:int32](0x02)
-  buf.writeUUID(client.uuid)
-  buf.writeString(client.username)
-  await client.socket.send(cast[string](buf.data))
-  buf.free()
-  info fmt"User {client.username} is logged!"
-  # else:
+    var buf = newBuffer()
+    buf.writeNum[:int32](0x02)
+    # buf.writeUUID(client.uuid)
+    buf.writeString($client.uuid)
+    buf.writeString(client.username)
+    buf.writeVar[:int32](0x00)  # Number of properties
+    await client.socket.sendBuffer(buf)
+    buf.free()
+    info fmt"User {client.username} is logged!"
+  else:
     # New login success
-    # discard
+    discard

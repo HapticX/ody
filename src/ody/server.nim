@@ -87,6 +87,7 @@ proc processRequest*(socket: AsyncSocket) {.async.} =
       else:
         discard
   except:
+    echo getStackTrace()
     for i in 0..<clients.len:
       if clients[i] == client:
         clients.del(i)
