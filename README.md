@@ -1,6 +1,6 @@
 <div align="center">
 
-# MineOdyssey
+# ODY
 ### Nim Minecraft server written with ❤
 
 </div>

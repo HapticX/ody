@@ -44,6 +44,9 @@ a.html
 private_test*.nim
 
 
+src/config.json
+
+
 # NodeJS builds
 src/happyx/bindings/bin/
 src/happyx/bindings/denim_build/
