@@ -8,7 +8,7 @@ func `%`(uuid: UUID): JsonNode =
   %($uuid)
 
 
-proc buildServerStatus*(config: JsonNode, onlinePlayers: seq[ServerPlayer]): JsonNode =
+proc buildServerStatus*(config: JsonNode, onlinePlayers: int, client: Client): JsonNode =
   ## Creates a status JSON response for Java Edition servers.
   ##
   ## The `description` field is a Chat object, but is not currently handled as such.
@@ -18,14 +18,33 @@ proc buildServerStatus*(config: JsonNode, onlinePlayers: seq[ServerPlayer]): Jso
   # var f = open("nim.txt", fmRead)
   # let data = f.readAll()
   # f.close()
+  var
+    availableVersions: seq[string] = @[]
+    availableProtocols: seq[int] = @[]
+    idx = -1
+  if config.hasKey("available_versions"):
+    for v in config["available_versions"]:
+      if PROTOCOLS.hasKey(v.str):
+        if PROTOCOLS[v.str].num == client.protocolVersion:
+          idx = availableProtocols.len
+        availableProtocols.add(PROTOCOLS[v.str].num)
+        availableVersions.add(v.str)
   %*{
     "version": {
-      "name": config["version"],
-      "protocol": PROTOCOLS[config["version"].getStr]
+      "name":
+        if idx != -1:
+          availableVersions[idx]
+        else:
+          config["version"].str,
+      "protocol":
+        if idx != -1:
+          availableProtocols[idx]
+        else:
+          PROTOCOLS[config["version"].str].num
     },
     "players": {
       "max": config["max_players"],
-      "online": onlinePlayers.len,
+      "online": onlinePlayers,
       "sample": []
     },
     # "favicon": data,

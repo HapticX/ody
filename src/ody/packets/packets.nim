@@ -28,7 +28,7 @@ type
     details*: seq[tuple[title: string, description: string]]
 
 
-proc sendBuffer*(socket: AsyncSocket, buf: Buffer): Future[void] {.async.} =
+proc sendPacket*(socket: AsyncSocket, buf: Buffer): Future[void] {.async.} =
   var tmpBuf = newBuffer()
   tmpBuf.writeVar[:int32](buf.data.len.int32)
   tmpBuf.data = tmpBuf.data & buf.data
@@ -36,25 +36,16 @@ proc sendBuffer*(socket: AsyncSocket, buf: Buffer): Future[void] {.async.} =
   tmpBuf.free()
 
 
-proc parsePacket*(buf: Buffer): BasePacket =
+func parsePacket*(buf: Buffer): BasePacket =
   ## Parses AsyncSocket client connection and return base packet information
   let
     packetLength = buf.readVar[:int32]()
     packetId = buf.readVar[:int32]()
-  buf.data.setLen(packetLength+4)
+  buf.data.setLen(packetLength+64)
   BasePacket(id: packetId, length: packetLength, buf: buf)
 
 
-proc ping*(socket: AsyncSocket, packet: BasePacket): Future[void] {.async.} =
-  ## Reads packet buffer as Ping packet and responds data to socket
-  var buf = newBuffer()
-  buf.writeVar[:int32](0x01)
-  buf.writeVar[:int64](packet.buf.readVar[:int64]())
-  await socket.send(cast[string](buf.data))
-  buf.free()
-
-
-proc toHandshake*(packet: BasePacket): HandshakePacket =
+func toHandshake*(packet: BasePacket): HandshakePacket =
   ## Reads packet buffer as Handshake packet
   if packet.length >= 16:
     let
@@ -69,24 +60,57 @@ proc toHandshake*(packet: BasePacket): HandshakePacket =
     )
 
 
-proc toLogin*(packet: BasePacket): LoginPacket =
+proc toLogin*(packet: BasePacket, client: Client): LoginPacket =
   ## Reads packet buffer as Login packet
-  let
-    username = packet.buf.readStr()
-    uuid = packet.buf.readUUID()
-  LoginPacket(base: packet, username: username, uuid: uuid)
+  # <= v1.18.2
+  echo client.isNil
+  if client.protocolVersion <= 758:
+    let username = packet.buf.readStr()
+    LoginPacket(base: packet, username: username, uuid: genUUID())
+  # v1.19.3 - 1.20.1
+  elif client.protocolVersion >= 761 and client.protocolVersion <= 763:
+    let
+      username = packet.buf.readStr()
+      hasUUID = packet.buf.readNum[:bool]()
+      uuid =
+        if hasUUID:
+          packet.buf.readUUID()
+        else:
+          genUUID()
+    LoginPacket(base: packet, username: username, uuid: uuid)
+  # v1.20.2+
+  elif client.protocolVersion >= 764:
+    let
+      username = packet.buf.readStr()
+      uuid = packet.buf.readUUID()
+    LoginPacket(base: packet, username: username, uuid: uuid)
+  else:
+    let
+      username = packet.buf.readStr()
+    LoginPacket(base: packet, username: username, uuid: genUUID())
 
 
-proc toDisconnectDetails*(packet: BasePacket): DisconnectDetails =
+func toDisconnectDetails*(packet: BasePacket): DisconnectDetails =
   ## Reads packet buffer as Login packet
-  let detailsLength = packet.buf.readVar[:int32]()
-  var details: seq[tuple[title: string, description: string]] = @[]
-  for i in 0..<detailsLength:
+  var
+    detailsLength = packet.buf.readVar[:int32]()
+    details: seq[tuple[title: string, description: string]] = @[]
+  while detailsLength > 0:
     details.add((
       title: packet.buf.readStr(),
       description: packet.buf.readStr(),
     ))
+    dec detailsLength
   DisconnectDetails(base: packet, details: details)
+
+
+proc ping*(socket: AsyncSocket, packet: BasePacket): Future[void] {.async.} =
+  ## Reads packet buffer as Ping packet and responds data to socket
+  var buf = newBuffer()
+  buf.writeVar[:int32](0x01)
+  buf.writeNum[:int64](packet.buf.readNum[:int64]())
+  await socket.sendPacket(buf)
+  buf.free()
 
 
 proc sendServerStatus*(socket: AsyncSocket, data: JsonNode): Future[void] {.async.} =
@@ -94,23 +118,22 @@ proc sendServerStatus*(socket: AsyncSocket, data: JsonNode): Future[void] {.asyn
   var buf = newBuffer()
   buf.writeVar[:int32](0x00)
   buf.writeString($data)
-  await socket.sendBuffer(buf)
+  await socket.sendPacket(buf)
   buf.free()
 
 
 proc sendLoggedIn*(client: Client): Future[void] {.async.} =
   ## Responds server status
-  if client.protocolVersion < 735:
+  # Version older than 1.18.2
+  if client.protocolVersion < 758:
     # Old login success
     var buf = newBuffer()
     buf.writeNum[:int32](0x02)
-    # buf.writeUUID(client.uuid)
     buf.writeString($client.uuid)
     buf.writeString(client.username)
-    buf.writeVar[:int32](0x00)  # Number of properties
-    await client.socket.sendBuffer(buf)
+    await client.socket.sendPacket(buf)
     buf.free()
-    info fmt"User {client.username} is logged!"
+    info fmt"{client.username} logged in to the server"
   else:
     # New login success
     discard

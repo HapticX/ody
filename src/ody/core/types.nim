@@ -22,6 +22,7 @@ type
     name*: string
     id*: UUID
   ClientState* {.pure, size: sizeof(uint8).} = enum
+    Status,
     Handshake,
     Login,
     Play,

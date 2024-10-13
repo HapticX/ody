@@ -1,11 +1,15 @@
-import std/json
+import
+  std/json
+
 
 const
   CONFIG_NAME* = "config.json"
 
+
 let
   DEFAULT_CONFIG* = %*{
-    "version": "1.21",
+    "version": "1.14.4",
+    "available_versions": ["1.14.4", "1.12.2"],
     "description": "Ody server",
     "max_players": 20,
     "online_mode": false,

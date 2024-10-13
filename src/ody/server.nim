@@ -9,7 +9,8 @@ import
   ./packets/packets,
   ./core/types,
   ./configuration,
-  ./utils
+  ./utils,
+  ./states
 
 
 var consoleLogger = newConsoleLogger(
@@ -36,62 +37,37 @@ proc processRequest*(socket: AsyncSocket) {.async.} =
     client: Client
   try:
     while not socket.isNil and not socket.isClosed():
-      # let line = await client.recvLine()
       var buf = await socket.makeBuffer()
       let packet = parsePacket(buf)
 
-      if packet.length < 0:
+      if packet.length < 0 or buf.len == 0:
         # no packet available, client was closed
-        return
+        continue
+      # debug fmt"packet 0x{packet.id.byte.toHex()} with {packet.length} length"
 
-      # debug(fmt"Get new packet with ID {packet.id} [{packet.length}]")
-      case packet.id
-      # Handshake state
-      of 0x00:
-        case state
-        of ClientState.Handshake:
-          let handshake = packet.toHandshake()
-          case handshake.nextState:
-            of 1:
-              await socket.sendServerStatus(buildServerStatus(currentConfig, serverPlayers))
-            of 2:
-              client = Client(
-                host: handshake.serverAddress,
-                port: handshake.serverPort,
-                protocolVersion: handshake.protocolVersion,
-                socket: socket,
-                username: ""
-              )
-              clients.add(client)
-              state = ClientState.Login
-            else:
-              discard
-        of ClientState.Login:
-          var login = packet.toLogin()
-          client.username = login.username
-          client.uuid = login.uuid
-          await client.sendLoggedIn()
-          state = ClientState.Play
-          # serverPlayers.add(ServerPlayer(username: login.username, uuid: $login.uuid))
-        else:
-          discard
-      # Ping-Pong state
-      of 0x01:
-        echo "pong"
-        await ping(socket, packet)
-      # Custom Report Details
-      # TODO
-      of 0x7A:
-        let details = packet.toDisconnectDetails()
-        echo "player disconnect details: ", details.details
-      else:
+      case state
+      of ClientState.Handshake:
+        handshakeState()
+      of ClientState.Status:
+        statusState()
+      of ClientState.Login:
+        loginState()
+      of ClientState.Play:
         discard
+      of ClientState.Transfer:
+        discard
+      # # Custom Report Details
+      # of 0x7A:
+      #   let details = packet.toDisconnectDetails()
+      #   echo "player disconnect details: ", details.details
+      # else:
+      # debug fmt"Unknown packet ID - {packet.id.byte.toHex()}"
   except:
     echo getStackTrace()
-    for i in 0..<clients.len:
-      if clients[i] == client:
-        clients.del(i)
-        break
+  for i in 0..<clients.len:
+    if clients[i] == client:
+      clients.del(i)
+      break
 
 
 proc serve*(s: Settings) {.async.} =
