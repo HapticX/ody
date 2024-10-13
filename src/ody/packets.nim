@@ -4,8 +4,8 @@ import
   std/logging,
   std/strformat,
   std/strutils,
-  ../proto,
-  ../core/types
+  ./proto,
+  ./core/types
 
 
 type

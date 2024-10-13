@@ -6,7 +6,7 @@ import
   std/strutils,
   std/terminal,
   ./proto,
-  ./packets/packets,
+  ./packets,
   ./core/types,
   ./configuration,
   ./utils,

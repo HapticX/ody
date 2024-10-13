@@ -1,7 +1,7 @@
 import
   std/asyncdispatch,
   std/asyncnet,
-  ./packets/packets
+  ./packets
 
 
 template handshakeState*() {.dirty.} =
