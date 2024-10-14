@@ -13,29 +13,50 @@ export
 
 type
   PlayerState* {.pure, size: sizeof(uint8).} = enum
-    Status,
-    Handshake,
-    Login,
-    Play,
+    Status
+    Handshake
+    Login
+    Play
     Transfer
-  Player* = ref object
-    socket*: AsyncSocket
-    protocolVersion*: int
-    host*: string
-    port*: uint16
-    username*: string
-    uuid*: UUID
-  Identifier* = object
-    namespace*: string
-    value*: string
   PositionFormat* {.pure, size: sizeof(uint8).} = enum
     XYZ = 0'u8
     XZY
+  Dimension* {.pure, size: sizeof(int8).} = enum
+    Nether = -1
+    Overworld = 0
+    End = 1
+  GameMode* {.pure, size: sizeof(uint8).} = enum
+    Survival = 0
+    Creative = 1
+    Adventure = 2
+    Spectator = 3
+  ChatMessageType* {.pure, size: sizeof(uint8).} = enum
+    ChatBox = 0
+    System = 1
+    GameInfo = 2
+  Identifier* = object
+    namespace*: string
+    value*: string
   Position* = object
     format*: PositionFormat
     y*: int16
     x*: int32
     z*: int32
+  World* = ref object
+    isActive*: bool
+    tickRate*: int
+    entities*: seq[Entity]
+    name*: string
+  Entity* {.inheritable.} = ref object
+    id*: int
+    uuid*: UUID
+    name*: string
+  Player* = ref object of Entity
+    socket*: AsyncSocket
+    protocolVersion*: int
+    host*: string
+    port*: uint16
+    username*: string
 
 
 func `$`*(i: Identifier): string =
