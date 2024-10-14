@@ -22,9 +22,11 @@ type Buffer* = ref object
 proc makeBuffer*(socket: AsyncSocket): Future[Buffer] {.async.} =
   ## Receive all data from socket and write it into buffer
   if not socket.isNil and not socket.isClosed():
-    var arr = newSeq[byte](4096)
-    discard await asyncdispatch.recvInto(socket.getFd().AsyncFD, addr arr[0], 4096, {SocketFlag.SafeDisconn})
-    return Buffer(data: arr, pos: 0)
+    var
+      arr = newSeq[byte](4096)
+      res = await asyncdispatch.recvInto(socket.getFd().AsyncFD, addr arr[0], 4096, {SocketFlag.SafeDisconn})
+    if res != 0:
+      return Buffer(data: arr, pos: 0)
 
 
 func newBuffer*(data: openarray[byte] = newSeq[byte]()): Buffer =

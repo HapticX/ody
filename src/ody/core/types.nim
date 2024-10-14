@@ -12,12 +12,6 @@ export
 
 
 type
-  Settings* = object
-    name*: string
-    host*: string
-    port*: uint16
-    maxPlayers*: uint32
-    onlineMode*: bool  ## Checks if users is online when true
   ServerPlayer* = object ## Used for creating the server list sample
     name*: string
     id*: UUID

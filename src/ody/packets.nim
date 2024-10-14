@@ -63,7 +63,6 @@ func toHandshake*(packet: BasePacket): HandshakePacket =
 proc toLogin*(packet: BasePacket, client: Client): LoginPacket =
   ## Reads packet buffer as Login packet
   # <= v1.18.2
-  echo client.isNil
   if client.protocolVersion <= 758:
     let username = packet.buf.readStr()
     LoginPacket(base: packet, username: username, uuid: genUUID())
@@ -128,7 +127,7 @@ proc sendLoggedIn*(client: Client): Future[void] {.async.} =
   if client.protocolVersion < 758:
     # Old login success
     var buf = newBuffer()
-    buf.writeNum[:int32](0x02)
+    buf.writeVar[:int32](0x02)
     buf.writeString($client.uuid)
     buf.writeString(client.username)
     await client.socket.sendPacket(buf)

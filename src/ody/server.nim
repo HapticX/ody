@@ -38,12 +38,14 @@ proc processRequest*(socket: AsyncSocket) {.async.} =
   try:
     while not socket.isNil and not socket.isClosed():
       var buf = await socket.makeBuffer()
+      if buf.isNil:
+        continue
       let packet = parsePacket(buf)
 
       if packet.length < 0 or buf.len == 0:
         # no packet available, client was closed
         continue
-      # debug fmt"packet 0x{packet.id.byte.toHex()} with {packet.length} length"
+      debug fmt"packet 0x{packet.id.byte.toHex()} with {packet.length} length"
 
       case state
       of ClientState.Handshake:
@@ -54,6 +56,7 @@ proc processRequest*(socket: AsyncSocket) {.async.} =
         loginState()
       of ClientState.Play:
         discard
+        # debug fmt"packet 0x{packet.id.byte.toHex()} with {packet.length} length"
       of ClientState.Transfer:
         discard
       # # Custom Report Details
@@ -70,7 +73,7 @@ proc processRequest*(socket: AsyncSocket) {.async.} =
       break
 
 
-proc serve*(s: Settings) {.async.} =
+proc runServer*() {.async.} =
   ## Launches server
   
   # Configuration
@@ -91,7 +94,7 @@ proc serve*(s: Settings) {.async.} =
   # Setup server
   var server = newAsyncSocket()
   server.setSockOpt(OptReuseAddr, true)
-  server.bindAddr(Port(s.port), s.host)
+  server.bindAddr(Port(currentConfig["port"].num), currentConfig["host"].str)
   server.listen()
 
   info fmt"""Server started at {currentConfig["host"].getStr}:{currentConfig["port"]}"""
