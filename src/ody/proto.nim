@@ -1,4 +1,4 @@
-## Provides minecraft protocol realisation
+## Provides minecraft protocol and buffer realisation
 import
   std/asyncdispatch,
   std/asyncnet,
@@ -100,6 +100,16 @@ func writeUUID*(b: Buffer, uuid: UUID) =
 proc writeString*(b: Buffer, s: string) =
   ## Writes a string to a buffer
   b.writeVar[:int32](s.len.int32)
+  if (b.pos + s.len) > b.data.len:
+    b.data.setLen(b.pos + s.len)
+
+  b.data[b.pos..<(b.pos+s.len)] = cast[seq[byte]](s)
+  b.pos += s.len
+
+
+proc writeStringU16*(b: Buffer, s: string) =
+  ## Writes a string to a buffer
+  b.writeNum[:uint16](s.len.uint16)
   if (b.pos + s.len) > b.data.len:
     b.data.setLen(b.pos + s.len)
 

@@ -6,7 +6,8 @@ import
   std/times,
   std/os,
   ./core/types,
-  ./entities
+  ./entities,
+  ./nbt
 
 
 proc tick*(w: World) =
