@@ -10,7 +10,8 @@ import
   ./core/types,
   ./configuration,
   ./utils,
-  ./states
+  ./states,
+  ./world
 
 
 var consoleLogger = newConsoleLogger(
@@ -20,21 +21,19 @@ var consoleLogger = newConsoleLogger(
 addHandler(consoleLogger)
 
 
-var
-  serverPlayers: seq[ServerPlayer] = @[]
-  clients: seq[Client] = @[]
+var players: seq[Player] = @[]
 
 
-proc `[]`*(self: seq[Client], key: AsyncSocket): Client =
-  for c in clients:
-    if c.socket == key:
-      return c
+proc `[]`*(self: seq[Player], key: AsyncSocket): Player =
+  for p in players:
+    if p.socket == key:
+      return p
 
 
 proc processRequest*(socket: AsyncSocket) {.async.} =
   var
-    state = ClientState.Handshake
-    client: Client
+    state = PlayerState.Handshake
+    player: Player
   try:
     while not socket.isNil and not socket.isClosed():
       var buf = await socket.makeBuffer()
@@ -48,16 +47,16 @@ proc processRequest*(socket: AsyncSocket) {.async.} =
       debug fmt"packet 0x{packet.id.byte.toHex()} with {packet.length} length"
 
       case state
-      of ClientState.Handshake:
+      of PlayerState.Handshake:
         handshakeState()
-      of ClientState.Status:
+      of PlayerState.Status:
         statusState()
-      of ClientState.Login:
+      of PlayerState.Login:
         loginState()
-      of ClientState.Play:
+      of PlayerState.Play:
         discard
         # debug fmt"packet 0x{packet.id.byte.toHex()} with {packet.length} length"
-      of ClientState.Transfer:
+      of PlayerState.Transfer:
         discard
       # # Custom Report Details
       # of 0x7A:
@@ -67,9 +66,9 @@ proc processRequest*(socket: AsyncSocket) {.async.} =
       # debug fmt"Unknown packet ID - {packet.id.byte.toHex()}"
   except:
     echo getStackTrace()
-  for i in 0..<clients.len:
-    if clients[i] == client:
-      clients.del(i)
+  for i in 0..<players.len:
+    if players[i] == player:
+      players.del(i)
       break
 
 

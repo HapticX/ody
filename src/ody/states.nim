@@ -10,25 +10,25 @@ template handshakeState*() {.dirty.} =
     let handshake = packet.toHandshake()
     case handshake.nextState:
       of 1:
-        client = Client(
+        player = Player(
           host: handshake.serverAddress,
           port: handshake.serverPort,
           protocolVersion: handshake.protocolVersion,
           socket: socket,
           username: ""
         )
-        state = ClientState.Status
+        state = PlayerState.Status
       of 2:
-        client = Client(
+        player = Player(
           host: handshake.serverAddress,
           port: handshake.serverPort,
           protocolVersion: handshake.protocolVersion,
           socket: socket,
           username: ""
         )
-        state = ClientState.Login
+        state = PlayerState.Login
       of 3:
-        state = ClientState.Transfer
+        state = PlayerState.Transfer
       else:
         discard
   # Ping-Pong state
@@ -42,9 +42,9 @@ template statusState*() {.dirty.} =
   case packet.id
   of 0x00:
     await socket.sendServerStatus(buildServerStatus(
-      currentConfig, clients.len, client
+      currentConfig, players.len, player
     ))
-    state = ClientState.Handshake
+    state = PlayerState.Handshake
   # Ping-Pong state
   of 0x01:
     await ping(socket, packet)
@@ -55,11 +55,19 @@ template statusState*() {.dirty.} =
 template loginState*() {.dirty.} =
   case packet.id
   of 0x00:
-    var login = packet.toLogin(client)
-    client.username = login.username
-    client.uuid = login.uuid
-    clients.add(client)
-    await client.sendLoggedIn()
-    state = ClientState.Play
+    var login = packet.toLogin(player)
+    player.username = login.username
+    player.uuid = login.uuid
+    players.add(player)
+    await player.sendLoggedIn()
+    state = PlayerState.Play
+  else:
+    discard
+
+
+template playState*() {.dirty.} =
+  case packet.id
+  of 0x00:
+    discard
   else:
     discard

@@ -12,16 +12,13 @@ export
 
 
 type
-  ServerPlayer* = object ## Used for creating the server list sample
-    name*: string
-    id*: UUID
-  ClientState* {.pure, size: sizeof(uint8).} = enum
+  PlayerState* {.pure, size: sizeof(uint8).} = enum
     Status,
     Handshake,
     Login,
     Play,
     Transfer
-  Client* = ref object
+  Player* = ref object
     socket*: AsyncSocket
     protocolVersion*: int
     host*: string

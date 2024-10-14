@@ -8,7 +8,7 @@ func `%`(uuid: UUID): JsonNode =
   %($uuid)
 
 
-proc buildServerStatus*(config: JsonNode, onlinePlayers: int, client: Client): JsonNode =
+proc buildServerStatus*(config: JsonNode, onlinePlayers: int, player: Player): JsonNode =
   ## Creates a status JSON response for Java Edition servers.
   ##
   ## The `description` field is a Chat object, but is not currently handled as such.
@@ -25,7 +25,7 @@ proc buildServerStatus*(config: JsonNode, onlinePlayers: int, client: Client): J
   if config.hasKey("available_versions"):
     for v in config["available_versions"]:
       if PROTOCOLS.hasKey(v.str):
-        if PROTOCOLS[v.str].num == client.protocolVersion:
+        if PROTOCOLS[v.str].num == player.protocolVersion:
           idx = availableProtocols.len
         availableProtocols.add(PROTOCOLS[v.str].num)
         availableVersions.add(v.str)

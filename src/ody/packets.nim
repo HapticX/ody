@@ -60,14 +60,14 @@ func toHandshake*(packet: BasePacket): HandshakePacket =
     )
 
 
-proc toLogin*(packet: BasePacket, client: Client): LoginPacket =
+proc toLogin*(packet: BasePacket, player: Player): LoginPacket =
   ## Reads packet buffer as Login packet
   # <= v1.18.2
-  if client.protocolVersion <= 758:
+  if player.protocolVersion <= 758:
     let username = packet.buf.readStr()
     LoginPacket(base: packet, username: username, uuid: genUUID())
   # v1.19.3 - 1.20.1
-  elif client.protocolVersion >= 761 and client.protocolVersion <= 763:
+  elif player.protocolVersion >= 761 and player.protocolVersion <= 763:
     let
       username = packet.buf.readStr()
       hasUUID = packet.buf.readNum[:bool]()
@@ -78,7 +78,7 @@ proc toLogin*(packet: BasePacket, client: Client): LoginPacket =
           genUUID()
     LoginPacket(base: packet, username: username, uuid: uuid)
   # v1.20.2+
-  elif client.protocolVersion >= 764:
+  elif player.protocolVersion >= 764:
     let
       username = packet.buf.readStr()
       uuid = packet.buf.readUUID()
@@ -121,18 +121,18 @@ proc sendServerStatus*(socket: AsyncSocket, data: JsonNode): Future[void] {.asyn
   buf.free()
 
 
-proc sendLoggedIn*(client: Client): Future[void] {.async.} =
+proc sendLoggedIn*(player: Player): Future[void] {.async.} =
   ## Responds server status
   # Version older than 1.18.2
-  if client.protocolVersion < 758:
+  if player.protocolVersion < 758:
     # Old login success
     var buf = newBuffer()
     buf.writeVar[:int32](0x02)
-    buf.writeString($client.uuid)
-    buf.writeString(client.username)
-    await client.socket.sendPacket(buf)
+    buf.writeString($player.uuid)
+    buf.writeString(player.username)
+    await player.socket.sendPacket(buf)
     buf.free()
-    info fmt"{client.username} logged in to the server"
+    info fmt"{player.username} logged in to the server"
   else:
     # New login success
     discard
