@@ -10,7 +10,9 @@
 
 - [x] Server status;
 - [x] Server ping;
-- [ ] Login in to the server;
+- [x] Login in to the server;
+- [ ] Enter in the world;
+- [ ] World generation;
 
 
 ## Version support
