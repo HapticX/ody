@@ -1,4 +1,7 @@
-## Provides working with NBTs
+## This module provides functionality for working with Named Binary Tags (NBT) data format, 
+## commonly used in Minecraft to store structured data. It allows reading, writing, and 
+## manipulating NBTs in various formats, such as integers, strings, arrays, and compound objects.
+
 import
   std/macros,
   std/strformat,
@@ -14,20 +17,20 @@ export
 
 type
   NbtType* {.pure, size: sizeof(uint8).} = enum
-    End  # 0x00
-    Byte  # 0x01
-    Short  # 0x02
-    Int  # 0x03
-    Long  # 0x04
-    Float  # 0x05
-    Double  # 0x06
-    ByteArray  # 0x07
-    String  # 0x08
-    List  # 0x09
-    Compound  # 0x0a
-    IntArray  # 0x0b
-    LongArray  # 0x0c
-  Nbt* = ref object
+    End  ## Represents the end of a compound or list in NBT format (tag 0x00).
+    Byte  ## A single signed byte (tag 0x01).
+    Short  ## A signed short (16-bit integer, tag 0x02).
+    Int  ## A signed integer (32-bit, tag 0x03).
+    Long  ## A signed long (64-bit integer, tag 0x04).
+    Float  ## A 32-bit floating point number (tag 0x05).
+    Double  ## A 64-bit floating point number (tag 0x06).
+    ByteArray  ## A sequence of bytes (tag 0x07).
+    String  ## A UTF-8 string (tag 0x08).
+    List  ## A list of other NBT elements (tag 0x09).
+    Compound  ## A compound structure, essentially a key-value map of NBT elements (tag 0x0a).
+    IntArray  ## An array of signed integers (tag 0x0b).
+    LongArray  ## An array of signed long integers (tag 0x0c).
+  Nbt* = ref object  ## The Nbt type represents an NBT tag, which can hold various data types based on its kind.
     hasName*: bool
     name*: string
     case kind*: NbtType
@@ -44,10 +47,13 @@ type
     of Compound: carr*: seq[Nbt]
     of IntArray: iarr*: seq[int32]
     of LongArray: larr*: seq[int64]
+  
+  ## NbtTypes is a shorthand alias for all the types that can be used in NBT tags.
   NbtTypes* = byte | int16 | int32 | int64 | float32 | float64 | seq[byte] | string | seq[Nbt] | seq[int32] | seq[int64]
 
 
 proc `$`*(this: Nbt): string =
+  ## Converts an NBT object into a string representation.
   let name =
     if this.hasName:
       ", '" & this.name & "'"
@@ -79,6 +85,7 @@ proc `$`*(this: Nbt): string =
 
 
 func pretty*(nbt: Nbt, lvl: int = 0): string =
+  ## Generates a pretty-printed string of an NBT object with indentation based on the level.
   let name =
     if nbt.hasName:
       fmt"'{nbt.name}'"
@@ -134,7 +141,7 @@ func pretty*(nbt: Nbt, lvl: int = 0): string =
 
 
 proc create*[T: NbtTypes](nbtType: NbtType, value: T, hasName: bool = false, name: string = ""): Nbt =
-  ## Creates a new NBT Tag from NbtType
+  ## Creates a new NBT tag of the specified type and assigns a value to it.
   result = Nbt(kind: nbtType, hasName: hasName, name: name)
 
   case nbtType
@@ -205,7 +212,7 @@ proc create*[T: NbtTypes](nbtType: NbtType, value: T, hasName: bool = false, nam
 
 
 proc write*(buf: Buffer, nbt: Nbt) =
-  ## Writes NBT Tag into Buffer
+  ## Writes an NBT tag to the provided buffer.
   buf.writeNum[:uint8](nbt.kind.uint8)
 
   if nbt.hasName:
@@ -257,7 +264,7 @@ proc write*(buf: Buffer, nbt: Nbt) =
 
 
 proc readNbt*(buf: Buffer, hasNbtName: bool = false): Nbt =
-  ## Writes NBT Tag into Buffer
+  ## Reads an NBT tag from the buffer, with an optional flag for handling named tags.
   result = Nbt(kind: NbtType(buf.readNum[:uint8]()), hasName: hasNbtName)
 
   if hasNbtName:
@@ -428,29 +435,36 @@ numberOperator(`/`, "divide")
 
 
 func `==`*(this, other: Nbt): bool =
+  ## Compares two NBT objects for equality.
   return this.equals(other)
 
 func `!=`*(this, other: Nbt): bool =
+  ## Compares two NBT objects for inequality.
   return not (this == other)
 
 func `&=`*(this: var Nbt, other: Nbt) =
   this = this & other
 
 func `+=`*(this: var Nbt, other: Nbt) =
+  ## Adds two NBT objects and assigns the result to the first one.
   this = this + other
 
 func `-=`*(this: var Nbt, other: Nbt) =
+  ## Subtracts one NBT object from another and assigns the result.
   this = this - other
 
 func `*=`*(this: var Nbt, other: Nbt) =
+  ## Multiplies two NBT objects and assigns the result to the first one.
   this = this * other
 
 func `/=`*(this: var Nbt, other: Nbt) =
+  ## Divides the first NBT object by the second and assigns the result.
   this = this / other
 
 
 func `[]`*(nbt: Nbt, key: int | string): Nbt | byte | int32 | int64 =
-  ## Gets value by index
+  ## Retrieves a value by index or key from an NBT tag.
+  ## For `Compound` tags, retrieves by string key; for array types, retrieves by integer index.
   when key is string:
     if nbt.kind != NbtType.Compound:
       raise newException(KeyError, "nbt " & $nbt.kind & " isn't Compound")
@@ -472,7 +486,8 @@ func `[]`*(nbt: Nbt, key: int | string): Nbt | byte | int32 | int64 =
 
 
 func `[]=`*[T: Nbt | byte | int32 | int64](nbt: Nbt, key: int | string, value: T) =
-  ## Sets a new key entry if nbt is Compund, otherwise working with nbt as with array
+  ## Sets a value by index or key in an NBT tag.
+  ## For `Compound` tags, sets by string key; for array types, sets by integer index.
   when key is string:
     if nbt.kind != NbtType.Compound:
       raise newException(KeyError, "nbt " & $nbt.kind & " isn't Compound")
@@ -520,8 +535,9 @@ func `[]=`*[T: Nbt | byte | int32 | int64](nbt: Nbt, key: int | string, value: T
 # ---=== Functions ===--- #
 
 
-proc add*(nbt: Nbt, value: Nbt | byte | int32 | int64) =
-  ## Adds `value` into `nbt` if it possible
+func add*(nbt: Nbt, value: Nbt | byte | int32 | int64) =
+  ## Adds `value` into `nbt` if the tag supports addition.
+  ## Applicable to `ByteArray`, `IntArray`, `LongArray`, and `List` NBT types.
   case nbt.kind
   of NbtType.ByteArray:
     if value is not byte:
@@ -549,8 +565,8 @@ proc add*(nbt: Nbt, value: Nbt | byte | int32 | int64) =
     raise newException(KeyError, fmt"nbt {nbt.kind} isn't iterable")
 
 
-proc clear*(nbt: Nbt) =
-  ## Removes all elements from array NBT
+func clear*(nbt: Nbt) =
+  ## Removes all elements from array-like NBT tags (`ByteArray`, `IntArray`, `LongArray`, `List`, `Compound`).
   case nbt.kind
   of NbtType.ByteArray:
     nbt.barr.setLen(0)
@@ -564,11 +580,58 @@ proc clear*(nbt: Nbt) =
     nbt.carr.setLen(0)
   else:
     raise newException(KeyError, fmt"nbt {nbt.kind} isn't iterable")
-  
+
+
+func del*(nbt: Nbt, key: string | int) =
+  ## Deletes an element by `key` (either `string` for `Compound` tags or `int` for array-like tags) from the NBT in O(1).
+  when key is string:
+    if nbt.kind != NbtType.Compound:
+      raise newException(ValueError, fmt"Can't delete item at {key} from NBT of type {nbt.kind}")
+    
+    for i in 0..<nbt.carr.len:
+      if nbt.carr[i].name == key:
+        nbt.carr.del(i)
+        break
+  else:
+    case nbt.kind
+    of NbtType.ByteArray:
+      nbt.barr.del(key)
+    of NbtType.IntArray:
+      nbt.iarr.del(key)
+    of NbtType.LongArray:
+      nbt.larr.del(key)
+    of NbtType.List:
+      nbt.arr.del(key)
+    else:
+      raise newException(KeyError, fmt"nbt {nbt.kind} isn't iterable")
+
+
+func delete*(nbt: Nbt, key: string | int) =
+  ## An alternative to `del*`, removes an entry by `key` from the NBT in O(n), handling `Compound` or array-like tags.
+  when key is string:
+    if nbt.kind != NbtType.Compound:
+      raise newException(ValueError, fmt"Can't delete item at {key} from NBT of type {nbt.kind}")
+    
+    for i in 0..<nbt.carr.len:
+      if nbt.carr[i].name == key:
+        nbt.carr.delete(i)
+        break
+  else:
+    case nbt.kind
+    of NbtType.ByteArray:
+      nbt.barr.delete(key)
+    of NbtType.IntArray:
+      nbt.iarr.delete(key)
+    of NbtType.LongArray:
+      nbt.larr.delete(key)
+    of NbtType.List:
+      nbt.arr.delete(key)
+    else:
+      raise newException(KeyError, fmt"nbt {nbt.kind} isn't iterable")
 
 
 iterator items*(nbt: Nbt): Nbt =
-  ## Iterates over List / Compound entries
+  ## Iterates over entries in a `List` or `Compound` NBT tag.
   case nbt.kind
   of NbtType.List:
     for item in nbt.arr:
@@ -581,7 +644,7 @@ iterator items*(nbt: Nbt): Nbt =
 
 
 iterator bytes*(nbt: Nbt): byte =
-  ## Iterates over ByteArray
+  ## Iterates over elements of a `ByteArray` NBT tag.
   case nbt.kind
   of NbtType.ByteArray:
     for item in nbt.barr:

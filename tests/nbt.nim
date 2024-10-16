@@ -54,6 +54,7 @@ suite "Nbt":
 
     echo buf
     arr["strings"] = nbt(["hello", "world"])
+    arr["x"].del(2)
     echo arr.pretty()
 
     var
