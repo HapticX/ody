@@ -1,35 +1,35 @@
 <div align="center">
 
 # ODY
-### Nim Minecraft server written with ❤
+### A Minecraft Server written in Nim with ❤
 
 </div>
 
+## Features
+- Multi-version support: Players can join the game from different versions, such as 1.12.2 and 1.14.4.
 
 ## TODO
 
-- [x] Server status;
-- [x] Server ping;
-- [x] Login in to the server;
-- [x] Working with NBT tags;
-- [ ] Enter in the world;
-- [ ] World generation;
+- [x] Server status
+- [x] Server ping
+- [x] Login to the server
+- [x] Working with NBT tags
+- [ ] Enter the world
+- [ ] World generation
 
+## Version Support
 
-## Version support
-
-| Version   | Support status   |
+| Version   | Support Status   |
 | :--       | --:              |
-| 1.21      | work in progress |
-| 1.14.4    | work in progress |
-| 1.12.2    | work in progress |
+| 1.21      | Work in progress |
+| 1.14.4    | Work in progress |
+| 1.12.2    | Work in progress |
 
+## Modding Support
 
-## Modding support
-
-| Language  | Support status   |
+| Language  | Support Status   |
 | :--       | --:              |
-| Python    | work in progress |
-| Java      | work in progress |
-| Kotlin    | work in progress |
-| C/C++     | work in progress |
+| Python    | Work in progress |
+| Java      | Work in progress |
+| Kotlin    | Work in progress |
+| C/C++     | Work in progress |
