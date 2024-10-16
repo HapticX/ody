@@ -11,7 +11,7 @@
 - [x] Server status;
 - [x] Server ping;
 - [x] Login in to the server;
-- [ ] Working with NBT tags;
+- [x] Working with NBT tags;
 - [ ] Enter in the world;
 - [ ] World generation;
 

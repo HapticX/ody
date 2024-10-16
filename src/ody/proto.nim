@@ -189,6 +189,21 @@ func readStr*(b: Buffer, maxLength = 32767): string {.raises: [ValueError].} =
   b.pos += length
 
 
+func readStrU16*(b: Buffer, maxLength = 32767): string {.raises: [ValueError].} =
+  ## Reads a string from a buffer
+  let length = b.readNum[:uint16]()
+
+  result.setLen(length)
+
+  let data = b.data[b.pos..<(b.pos+length.int)]
+  result = cast[string](data)
+
+  if result.len > maxLength:
+    raise newException(ValueError, "String is too long!")
+
+  b.pos += length.int
+
+
 func readUUID*(buf: Buffer): UUID =
   initUUID(buf.readVar[:int64](), buf.readVar[:int64]())
 
@@ -196,3 +211,9 @@ func readUUID*(buf: Buffer): UUID =
 func readIdentifier*(buf: Buffer): Identifier =
   let str = buf.readStr().split(':')
   Identifier(namespace: str[0], value: str[1])
+
+
+func `$`*(buf: Buffer): string =
+  result = ""
+  for i in buf.data:
+    result &= "0x" & $(i.toHex()) & " "
