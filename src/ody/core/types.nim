@@ -42,6 +42,8 @@ type
     y*: int16
     x*: int32
     z*: int32
+  Vector* = object
+    x*, y*, z*: float
   World* = ref object
     isActive*: bool
     tickRate*: int
