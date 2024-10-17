@@ -44,12 +44,19 @@ type
     z*: int32
   Vector* = object
     x*, y*, z*: float
+  Angle* = object
+    pitch*: float
+    yaw*: float
   World* = ref object
     isActive*: bool
     tickRate*: int
     entities*: seq[Entity]
     name*: string
-  Entity* {.inheritable.} = ref object
+  Transformable* {.inheritable.} = ref object
+    position*: Vector
+    rotation*: Angle
+    transformationFlags*: uint8
+  Entity* = ref object of Transformable
     id*: int
     uuid*: UUID
     name*: string

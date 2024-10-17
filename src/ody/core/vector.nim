@@ -1,3 +1,7 @@
+## This module provides utilities for working with 3D vectors, including 
+## vector initialization, basic arithmetic operations, normalization, 
+## dot product calculation, and comparison based on vector lengths.
+
 import
   std/math,
   ./types

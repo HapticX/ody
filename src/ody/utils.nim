@@ -8,6 +8,17 @@ func `%`(uuid: UUID): JsonNode =
   %($uuid)
 
 
+func isBitSet*[T: SomeInteger](val: T, pos: int): bool =
+  0 < ((val shr pos) and 1)
+
+
+func setBit*[T: SomeInteger](val: var T, pos: int) =
+  if not isBitSet(val, pos):
+    val = val or (1 shl pos).T
+  else:
+    val = val and not (1 shl pos).T
+
+
 proc buildServerStatus*(config: JsonNode, onlinePlayers: int, player: Player): JsonNode =
   ## Creates a status JSON response for Java Edition servers.
   ##

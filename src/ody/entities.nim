@@ -4,6 +4,12 @@ import
   ./core/types
 
 
+var
+  entityIndexCounter* {.threadvar.}: int
+
+entityIndexCounter = 0
+
+
 method onMove*(entity: Entity, pos: Position) {.base.} =
   discard
 
@@ -20,5 +26,5 @@ method onCreate*(entity: Entity) {.base.} =
   discard
 
 
-method isPlayer*(entity: Entity) {.base.} =
+method isPlayer*(entity: Entity): bool {.base.} =
   not entity.Player.socket.isNil
