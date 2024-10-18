@@ -5,13 +5,16 @@ import
   std/strformat,
   std/strutils,
   std/terminal,
+  std/os,
+  std/osproc,
   ./proto,
   ./packets,
   ./core/types,
   ./configuration,
   ./utils,
   ./states,
-  ./world
+  ./world,
+  ./map/map_manager
 
 
 var consoleLogger = newConsoleLogger(
@@ -89,6 +92,18 @@ proc runServer*() {.async.} =
     f.write(currentConfig.pretty())
     f.close()
     info("Success!")
+  
+  var map: MapManager
+
+  if not currentConfig.hasKey("game_map") or not fileExists(currentConfig["game_map"].str):
+    info("Game map not found. Creating new ...")
+    map = initGameMap(currentConfig["game_map"].str)
+    info("Game map was initialized.")
+  else:
+    info("Game map was found. Load game map ...")
+    map = initGameMap(currentConfig["game_map"].str)
+    info("Game map was loaded.")
+
 
   # Setup server
   var server = newAsyncSocket()

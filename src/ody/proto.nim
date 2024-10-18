@@ -50,6 +50,12 @@ func writeByte*(buf: Buffer, val: byte) =
   inc buf.pos
 
 
+func writeBool*(buf: Buffer, val: bool) =
+  ## Writes one byte into buffer and increase position
+  buf.data.add(val.byte)
+  inc buf.pos
+
+
 func deposit[T: SomeNumber | bool | char](value: T, oa: var openArray[byte]) {.raises: [ValueError].} =
   if oa.len < sizeof(T):
     raise newException(ValueError, "The buffer was to small to deposit a " & $T & '!')
@@ -131,6 +137,13 @@ template writePosition*(b: Buffer, p: Position, format = XZY) =
 func readByte*(buf: Buffer): byte =
   ## Reads one byte from buffer and increase position
   result = buf.data[buf.pos]
+  inc buf.pos
+
+
+
+func readBool*(buf: Buffer): bool =
+  ## Reads one byte from buffer and increase position
+  result = buf.data[buf.pos].bool
   inc buf.pos
 
 

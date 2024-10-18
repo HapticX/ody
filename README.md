@@ -14,6 +14,7 @@
 - [x] Server ping
 - [x] Login to the server
 - [x] Working with NBT tags
+- [x] Working with Chunks
 - [ ] Enter the world
 - [ ] World generation
 

@@ -4,6 +4,12 @@ import
 
 const
   CONFIG_NAME* = "config.json"
+  MAP_DATA_ENGINE_VERSION* = 1
+  CHUNK_MAP_WIDTH* = 100
+  BITS_PER_BLOCK* = 14
+  BLOCKS_COUNT* = 4096  # 16x16x16 blocks
+  REGION_SIZE_IN_CHUNKS* = 5
+  DEFAULT_GAME_MAP_PATH* = "./game_map.dat"
 
 
 let
@@ -15,6 +21,7 @@ let
     "online_mode": false,
     "host": "127.0.0.1",
     "port": 25565,
+    "game_map": DEFAULT_GAME_MAP_PATH
   }
   PROTOCOLS* = %*{
     "1.21": 767,

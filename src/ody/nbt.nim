@@ -557,9 +557,9 @@ func add*(nbt: Nbt, value: Nbt | byte | int32 | int64) =
   of NbtType.List:
     if value is not Nbt:
       raise newException(ValueError, "you can set only Nbt for List tag")
-    if nbt.arr.len > 0 and nbt.arr[0].kind != value.kind:
-      raise newException(ValueError, fmt"value type should be {nbt.arr[0].kind}")
     when value is Nbt:
+      if nbt.arr.len > 0 and nbt.arr[0].kind != value.kind:
+        raise newException(ValueError, fmt"value type should be {nbt.arr[0].kind}")
       nbt.arr.add value
   else:
     raise newException(KeyError, fmt"nbt {nbt.kind} isn't iterable")
